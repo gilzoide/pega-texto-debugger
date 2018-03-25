@@ -18,28 +18,13 @@
 
 #include <pega-texto-debugger/ptdb.h>
 
-/**
- * Allocate a Debugger with the options passed.
- */
-ptdb_t *ptdb_new(pt_match_options *match_options) {
+ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts) {
 	ptdb_t *debugger;
 	if(debugger = malloc(sizeof(ptdb_t))) {
 		if(match_options == NULL) match_options = &pt_default_match_options;
 		debugger->match_options = *match_options;
-	}
-	return debugger;
-}
-
-ptdb_t *ptdb_for_expr(pt_expr *expr, pt_match_options *match_options) {
-	ptdb_t *debugger;
-	if(debugger = ptdb_new(match_options)) {
-	}
-	return debugger;
-}
-
-ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options) {
-	ptdb_t *debugger;
-	if(debugger = ptdb_new(match_options)) {
+		debugger->grammar = grammar;
+		debugger->options = opts;
 	}
 	return debugger;
 }

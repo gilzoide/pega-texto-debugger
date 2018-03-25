@@ -17,6 +17,14 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Wno-parentheses")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -DNDEBUG")
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 
+include(FindPkgConfig)
+if(PKG_CONFIG_FOUND)
+	pkg_check_modules(PEGA_TEXTO REQUIRED pega-texto>=2)
+	link_libraries(${PEGA_TEXTO_LIBRARIES})
+else()
+	link_libraries(pega-texto)
+endif()
+
 # Build stuff
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 if(UNIX)

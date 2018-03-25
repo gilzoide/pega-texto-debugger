@@ -16,10 +16,15 @@
  * along with this pega-texto-debugger.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @file ptdb.h
+ */
+
 #ifndef __PEGA_TEXTO_DEBUGGER_PTDB_H__
 #define __PEGA_TEXTO_DEBUGGER_PTDB_H__
 
 #include <pega-texto.h>
+
+#include "options.h"
 
 /**
  * Debugger information and state.
@@ -27,23 +32,36 @@
 typedef struct {
 	/// Match options that will be wrapped by the Debugger ones.
 	pt_match_options match_options;
+	/// The Grammar that will be debugged.
+	pt_grammar *grammar;
+	/// The debugger options.
+	int options;
 } ptdb_t;
 
 /**
  * Create a debugger for Grammar.
+ *
+ * @param grammar       Grammar that will be debugged.
+ * @param match_options User match options.
+ * @param opts          Debugger options.
  */
-ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options);
-/**
- * Create a debugger for Expression.
- */
-ptdb_t *ptdb_for_expr(pt_expr *expr, pt_match_options *match_options);
+ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts);
 /**
  * Destroy an instance of Debugger, clearing the memory used by it.
+ *
+ * It is safe to pass a `NULL` pointer.
+ *
+ * @param debugger The Debugger.
  */
 void ptdb_destroy(ptdb_t *debugger);
 
 /**
- * Get the Match Options wrapper for a Debugger.
+ * Get the match options wrapper for a Debugger.
+ *
+ * Use the returned match options in `pt_match_grammar` and the Debugger REPL
+ * should open.
+ *
+ * @param debugger The Debugger.
  */
 pt_match_options ptdb_match_options_for_debugger(ptdb_t *debugger);
 
