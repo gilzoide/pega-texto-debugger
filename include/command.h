@@ -16,22 +16,46 @@
  * along with this pega-texto-debugger.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file options.h
+/** @file commands.h
+ * Commands available at the REPL.
  */
 
-#ifndef __PEGA_TEXTO_DEBUGGER_OPTIONS_H__
-#define __PEGA_TEXTO_DEBUGGER_OPTIONS_H__
+#ifndef __PEGA_TEXTO_DEBUGGER_COMMAND_H__
+#define __PEGA_TEXTO_DEBUGGER_COMMAND_H__
+
+#include <pega-texto.h>
 
 /**
- * Options for the debugger.
+ * Command numerical codes.
  */
 typedef enum {
-	/**
-	 * Turn this on if you want the wrapped debugger to be automatically
-	 * destroyed on the end of the `pt_match_grammar` call.
-	 */
-	PTDB_AUTORELEASE = 1 << 0,
-} ptdb_options;
+	PTDB_HELP = 0,
+	PTDB_STEP,
+	PTDB_NEXT,
+	PTDB_CONTINUE,
+	PTDB_FINISH,
+	PTDB_BACKTRACE,
+	PTDB_LIST,
+	PTDB_PRINT,
+	PTDB_RULES,
+	PTDB_BREAK_EXPR,
+	PTDB_BREAK_RULE,
+	PTDB_BREAK_END,
+	PTDB_BREAK_ERROR,
+
+	PTDB_OPCODE_MAX,
+} ptdb_opcode;
+
+/**
+ * A command to be run by the Debugger.
+ */
+typedef struct {
+	int opcode;
+	union {
+		char *str,
+		pt_expr *expr,
+	} data;
+} ptdb_command;
 
 #endif
 

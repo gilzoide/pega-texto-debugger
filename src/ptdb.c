@@ -16,7 +16,8 @@
  * along with this pega-texto-debugger.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pega-texto-debugger/ptdb.h>
+#include "ptdb.h"
+#include "match_actions.h"
 
 ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts) {
 	ptdb_t *debugger;
@@ -38,6 +39,11 @@ void ptdb_destroy(ptdb_t *debugger) {
 pt_match_options ptdb_match_options_for_debugger(ptdb_t *debugger) {
 	return (pt_match_options){
 		.userdata = debugger,
+		.each_iteration = ptdb_each_iteration,
+		.on_end = ptdb_on_end,
+		.each_success = ptdb_each_success,
+		.each_fail = ptdb_each_fail,
+		.on_error = ptdb_on_error,
 	};
 }
 

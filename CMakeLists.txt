@@ -40,7 +40,21 @@ add_subdirectory(src)
 # endif()
 
 # # Install headers
-file(GLOB headers "include/pega-texto-debugger/*.h")
 configure_file("include/pega-texto-debugger.h" "pega-texto-debugger.h" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pega-texto-debugger.h" DESTINATION "include")
-install(FILES ${headers} DESTINATION "include/${CMAKE_PROJECT_NAME}")
+
+
+# CPack packaging
+include(InstallRequiredSystemLibraries)
+set(CPACK_GENERATOR "STGZ;TGZ;TZ")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Debugging facilities for the pega-texto PEG runtime engine")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+set(CPACK_PACKAGE_CONTACT "gilzoide@gmail.com")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+include(CPack)

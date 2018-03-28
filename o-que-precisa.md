@@ -28,8 +28,14 @@ Comandos importantes
 - step
 - next
 - continue
+- finish
 - backtrace (estado)
-- list (
+- list
 - print 
 - rules (printa as regras da gramática)
+- breakpoint
+
+outros comandos:
+- frame N
+- up/down
 

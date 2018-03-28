@@ -17,6 +17,7 @@
  */
 
 #include "pega-texto-debugger.h"
+#include "ptdb.h"
 
 pt_match_options ptdb_wrap(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts) {
 	ptdb_t *debugger = ptdb_for_grammar(grammar, match_options, opts);

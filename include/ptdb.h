@@ -24,7 +24,7 @@
 
 #include <pega-texto.h>
 
-#include "options.h"
+#include "pega-texto-debugger.h"
 
 /**
  * Debugger information and state.
