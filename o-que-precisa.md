@@ -4,7 +4,7 @@ O que um debugger pro *pega-texto* precisa ter?
 - Inspeção da *string* sendo *matcheada*
 - Inspeção da pilha de `pt_match_state` e estados individuais
 - Inspeção da pilha de `pt_match_action` e ações individuais
-- *Breakpoints* por nome da regra
+- *Breakpoints* por nome da regra e posição na *string*
 - Ajuda e tutorial
 
 Extras (se rolar fazer, sucesso)

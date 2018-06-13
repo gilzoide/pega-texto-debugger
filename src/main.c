@@ -17,17 +17,15 @@
  */
 
 #include "pega-texto-debugger.h"
-#include "ptdb.h"
+#include "shell.h"
 
-pt_match_options ptdb_wrap(pt_grammar *grammar, pt_match_options *match_options, enum ptdb_options opts) {
-	ptdb_t *debugger = ptdb_for_grammar(grammar, match_options, opts);
-	return ptdb_match_options_for_debugger(debugger);
-}
+int main(int argc, char **argv) {
+	pt_grammar *grammar = ptdb_create_command_grammar();
+	pt_match_options opts = {};
+	opts = ptdb_wrap(grammar, &opts, PTDB_DEFAULT_OPTIONS | PTDB_AUTORELEASE);
+	pt_match_grammar(grammar, "olar", &opts);
 
-void ptdb_destroy_wrapped(pt_match_options *match_options) {
-	if(match_options) {
-		ptdb_destroy((ptdb_t *) match_options->userdata);
-		match_options->userdata = NULL;
-	}
+	pt_destroy_grammar(grammar);
+	return 0;
 }
 

@@ -16,7 +16,7 @@
  * along with this pega-texto-debugger.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file commands.h
+/** @file command.h
  * Commands available at the REPL.
  */
 
@@ -29,6 +29,7 @@
  * Command numerical codes.
  */
 typedef enum {
+	PTDB_INVALID = -1,
 	PTDB_HELP = 0,
 	PTDB_STEP,
 	PTDB_NEXT,
@@ -40,6 +41,7 @@ typedef enum {
 	PTDB_RULES,
 	PTDB_BREAK_EXPR,
 	PTDB_BREAK_RULE,
+	PTDB_BREAK_INPUT_POS,
 	PTDB_BREAK_END,
 	PTDB_BREAK_ERROR,
 
@@ -50,10 +52,14 @@ typedef enum {
  * A command to be run by the Debugger.
  */
 typedef struct {
+	/// Command code from #ptdb_opcode.
 	int opcode;
+	/// Input data for some commands.
 	union {
-		char *str,
-		pt_expr *expr,
+		char *str;     ///< Rule names.
+		pt_expr *expr; ///< Pega-texto Expression.
+		int pos;       ///< Position at input string.
+		int opcode;    ///< Opcode of reference command for help.
 	} data;
 } ptdb_command;
 

@@ -19,19 +19,24 @@
 #include "ptdb.h"
 #include "match_actions.h"
 
-ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts) {
+ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, enum ptdb_options opts) {
 	ptdb_t *debugger;
 	if(debugger = malloc(sizeof(ptdb_t))) {
 		if(match_options == NULL) match_options = &pt_default_match_options;
 		debugger->match_options = *match_options;
 		debugger->grammar = grammar;
 		debugger->options = opts;
+		if(!ptdb_shell_init(&debugger->shell)) {
+			ptdb_destroy(debugger);
+			debugger = NULL;
+		}
 	}
 	return debugger;
 }
 
 void ptdb_destroy(ptdb_t *debugger) {
 	if(debugger) {
+		ptdb_shell_destroy(&debugger->shell);
 		free(debugger);
 	}
 }

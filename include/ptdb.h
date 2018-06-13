@@ -22,18 +22,25 @@
 #ifndef __PEGA_TEXTO_DEBUGGER_PTDB_H__
 #define __PEGA_TEXTO_DEBUGGER_PTDB_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <pega-texto.h>
 
 #include "pega-texto-debugger.h"
+#include "shell.h"
 
 /**
  * Debugger information and state.
  */
-typedef struct {
+typedef struct ptdb_t {
 	/// Match options that will be wrapped by the Debugger ones.
 	pt_match_options match_options;
 	/// The Grammar that will be debugged.
 	pt_grammar *grammar;
+	/// Debugger shell data.
+	ptdb_shell shell;
 	/// The debugger options.
 	int options;
 } ptdb_t;
@@ -45,7 +52,7 @@ typedef struct {
  * @param match_options User match options.
  * @param opts          Debugger options.
  */
-ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts);
+ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, enum ptdb_options opts);
 /**
  * Destroy an instance of Debugger, clearing the memory used by it.
  *
@@ -64,6 +71,10 @@ void ptdb_destroy(ptdb_t *debugger);
  * @param debugger The Debugger.
  */
 pt_match_options ptdb_match_options_for_debugger(ptdb_t *debugger);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

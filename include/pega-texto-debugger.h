@@ -31,7 +31,7 @@ extern "C" {
 /**
  * Options for the debugger, to be OR'ed together.
  */
-typedef enum {
+enum ptdb_options {
 	/**
 	 * Turn this on if you want the wrapped debugger to be automatically
 	 * destroyed on the end of the `pt_match_grammar` call [default: off].
@@ -56,18 +56,19 @@ typedef enum {
 	 * Set of default options.
 	 */
 	PTDB_DEFAULT_OPTIONS = (PTDB_BREAK_ON_START | PTDB_BREAK_ON_ERROR),
-} ptdb_options;
+};
 
 /**
  * Create a debugger from Grammar and match options, wrapping it in the
  * returned match options.
  *
- * This may be the only addition needed for one-shot debugging a __pega-texto__
- * match: just wrap your Grammar with the #PTDB_AUTORELEASE option enabled and
- * call the `pt_match_grammar` function with the returned match options:
+ * This is the only addition needed for debugging a __pega-texto__ match.
+ * If you want to just one-shot debug your matching, wrap your Grammar with the
+ * #PTDB_AUTORELEASE option enabled and call the `pt_match_grammar` function
+ * with the returned match options:
  *
  * @code
- * pt_match_options my_options_with_debugger = ptdb_wrap(grammar, &my_options, PTDB_AUTORELEASE);
+ * pt_match_options my_options_with_debugger = ptdb_wrap(grammar, &my_options, PTDB_DEFAULT_OPTIONS | PTDB_AUTORELEASE);
  * pt_match_result result = pt_match_grammar(grammar, str, &my_options_with_debugger);
  * @endcode
  *
@@ -75,9 +76,9 @@ typedef enum {
  * @param match_options The user match options.
  * @param opts          Debugger options.
  *
- * @return 
+ * @return TODO
  */
-pt_match_options ptdb_wrap(pt_grammar *grammar, pt_match_options *match_options, ptdb_options opts);
+pt_match_options ptdb_wrap(pt_grammar *grammar, pt_match_options *match_options, enum ptdb_options opts);
 
 /**
  * Destroy a Debugger that is wrapped in a match options.

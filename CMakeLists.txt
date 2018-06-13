@@ -17,13 +17,8 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Wno-parentheses")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -DNDEBUG")
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 
-include(FindPkgConfig)
-if(PKG_CONFIG_FOUND)
-	pkg_check_modules(PEGA_TEXTO REQUIRED pega-texto>=2)
-	link_libraries(${PEGA_TEXTO_LIBRARIES})
-else()
-	link_libraries(pega-texto)
-endif()
+# 3rd party dependencies
+include(cmake/3rd-party.cmake)
 
 # Build stuff
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
@@ -39,7 +34,7 @@ add_subdirectory(src)
 	# add_subdirectory(examples)
 # endif()
 
-# # Install headers
+# # Install header
 configure_file("include/pega-texto-debugger.h" "pega-texto-debugger.h" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pega-texto-debugger.h" DESTINATION "include")
 

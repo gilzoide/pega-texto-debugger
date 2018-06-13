@@ -18,6 +18,7 @@
 
 #include "match_actions.h"
 #include "ptdb.h"
+#include "shell.h"
 
 void ptdb_each_iteration(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {
 	ptdb_t *debugger = data;
@@ -26,6 +27,7 @@ void ptdb_each_iteration(const pt_match_state_stack *s, const pt_match_action_st
 		if(debugger->match_options.each_iteration) debugger->match_options.each_iteration(s, a, str, debugger->match_options.userdata);
 
 		// open REPL on first time, if stepping or on breakpoints
+		ptdb_prompt_shell(debugger);
 	}
 }
 
@@ -37,6 +39,8 @@ void ptdb_on_end(const pt_match_state_stack *s, const pt_match_action_stack *a, 
 
 		// call user define on_end
 		if(debugger->match_options.on_end) debugger->match_options.on_end(s, a, str, result, debugger->match_options.userdata);
+		// deallocate debugger if PTDB_AUTORELEASE is on
+		if(debugger->options & PTDB_AUTORELEASE) ptdb_destroy(debugger);
 	}
 }
 
