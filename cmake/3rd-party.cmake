@@ -2,8 +2,8 @@ include(ExternalProject)
 set(replxx-bindir ${CMAKE_BINARY_DIR}/replxx)
 ExternalProject_add(replxx
 	PREFIX replxx
-	GIT_REPOSITORY https://github.com/gilzoide/replxx
-	GIT_TAG 34a02e70aba04fbf0a5fbb9ecb6e3229d006e0e3
+	GIT_REPOSITORY https://github.com/AmokHuginnsson/replxx
+	GIT_TAG 9da16bb45d5c22224cffac40c9b52352f98be8f1
 	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${replxx-bindir}
 	           -DREPLXX_BuildExamples=OFF
 	           -DBUILD_SHARED_LIBS=ON

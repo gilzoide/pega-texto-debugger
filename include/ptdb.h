@@ -22,10 +22,6 @@
 #ifndef __PEGA_TEXTO_DEBUGGER_PTDB_H__
 #define __PEGA_TEXTO_DEBUGGER_PTDB_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <pega-texto.h>
 
 #include "pega-texto-debugger.h"
@@ -71,10 +67,6 @@ void ptdb_destroy(ptdb_t *debugger);
  * @param debugger The Debugger.
  */
 pt_match_options ptdb_match_options_for_debugger(ptdb_t *debugger);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

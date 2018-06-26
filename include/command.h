@@ -56,7 +56,7 @@ typedef struct {
 	int opcode;
 	/// Input data for some commands.
 	union {
-		char *str;     ///< Rule names.
+		char *str;     ///< Rule names, error message.
 		pt_expr *expr; ///< Pega-texto Expression.
 		int pos;       ///< Position at input string.
 		int opcode;    ///< Opcode of reference command for help.
