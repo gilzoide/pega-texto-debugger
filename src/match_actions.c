@@ -23,23 +23,25 @@
 void ptdb_each_iteration(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {
 	ptdb_t *debugger = data;
 	if(debugger) {
-		// call user define each_iteration
+		// call user defined each_iteration
 		if(debugger->match_options.each_iteration) debugger->match_options.each_iteration(s, a, str, debugger->match_options.userdata);
 
-		// open REPL on first time, if stepping or on breakpoints
-		ptdb_prompt_shell(debugger);
+		if(debugger->options & PTDB_BREAK_ON_ITERATION) {
+			ptdb_command cmd;
+			do {
+				cmd = ptdb_prompt_shell(debugger);
+				ptdb_run_command(debugger, cmd, s, a, str);
+			} while(!ptdb_command_resume_matching(cmd));
+		}
 	}
 }
 
 void ptdb_on_end(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, pt_match_result result, void *data) {
 	ptdb_t *debugger = data;
 	if(debugger) {
-		// deallocate stuff if needed
-		// reset stuff if needed
-
-		// call user define on_end
+		// call user defined on_end
 		if(debugger->match_options.on_end) debugger->match_options.on_end(s, a, str, result, debugger->match_options.userdata);
-		// deallocate debugger if PTDB_AUTORELEASE is on
+
 		if(debugger->options & PTDB_AUTORELEASE) ptdb_destroy(debugger);
 	}
 }
@@ -47,7 +49,7 @@ void ptdb_on_end(const pt_match_state_stack *s, const pt_match_action_stack *a, 
 void ptdb_each_success(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, size_t begin, size_t end, void *data) {
 	ptdb_t *debugger = data;
 	if(debugger) {
-		// call user define each_success
+		// call user defined each_success
 		if(debugger->match_options.each_success) debugger->match_options.each_success(s, a, str, begin, end, debugger->match_options.userdata);
 	}
 }
@@ -55,7 +57,7 @@ void ptdb_each_success(const pt_match_state_stack *s, const pt_match_action_stac
 void ptdb_each_fail(const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str, void *data) {
 	ptdb_t *debugger = data;
 	if(debugger) {
-		// call user define each_fail
+		// call user defined each_fail
 		if(debugger->match_options.each_fail) debugger->match_options.each_fail(s, a, str, debugger->match_options.userdata);
 	}
 }
@@ -65,7 +67,7 @@ void ptdb_on_error(const char *str, size_t where, int code, void *data) {
 	if(debugger) {
 		// open REPL if breakpoint on errors
 
-		// call user define on_error
+		// call user defined on_error
 		if(debugger->match_options.on_error) debugger->match_options.on_error(str, where, code, debugger->match_options.userdata);
 	}
 }

@@ -33,7 +33,7 @@ Comandos importantes
 - list
 - print 
 - rules (printa as regras da gramática)
-- breakpoint
+- break
 
 outros comandos:
 - frame N

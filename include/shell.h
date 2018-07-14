@@ -52,6 +52,15 @@ int ptdb_shell_init(ptdb_shell *shell);
 void ptdb_shell_destroy(ptdb_shell *shell);
 
 /**
+ * Try to save the command history.
+ */
+void ptdb_shell_save_history(ptdb_shell *shell, const char *filename);
+/**
+ * Try to load the command history.
+ */
+void ptdb_shell_load_history(ptdb_shell *shell, const char *filename);
+
+/**
  * Create a Grammar that parses the debugger commands.
  */
 pt_grammar *ptdb_create_command_grammar();
@@ -64,7 +73,7 @@ ptdb_command ptdb_read_command(ptdb_shell *shell, const char *str);
 /**
  * Show the prompt and wait for user 
  */
-void ptdb_prompt_shell(ptdb_t *debugger);
+ptdb_command ptdb_prompt_shell(ptdb_t *debugger);
 
 #endif
 

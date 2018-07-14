@@ -30,12 +30,18 @@ ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, e
 			ptdb_destroy(debugger);
 			debugger = NULL;
 		}
+		else if(opts & PTDB_SHELL_USE_HISTORY) {
+			ptdb_shell_load_history(&debugger->shell, PTDB_HISTORY_FILE_NAME);
+		}
 	}
 	return debugger;
 }
 
 void ptdb_destroy(ptdb_t *debugger) {
 	if(debugger) {
+		if(debugger->options & PTDB_SHELL_USE_HISTORY) {
+			ptdb_shell_save_history(&debugger->shell, PTDB_HISTORY_FILE_NAME);
+		}
 		ptdb_shell_destroy(&debugger->shell);
 		free(debugger);
 	}

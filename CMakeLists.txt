@@ -18,7 +18,10 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -DNDEBUG")
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 
 # 3rd party dependencies
-include(cmake/3rd-party.cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Replxx REQUIRED)
+find_package(PegaTexto 2.1 REQUIRED)
+find_package(PegaTextoMemory REQUIRED)
 
 # Build stuff
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)

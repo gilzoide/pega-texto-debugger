@@ -21,6 +21,7 @@
 
 #include <pega-texto.h>
 
+#include <ctype.h>
 #include <stdio.h>
 
 int ptdb_shell_init(ptdb_shell *shell) {
@@ -35,10 +36,94 @@ void ptdb_shell_destroy(ptdb_shell *shell) {
 	}
 }
 
+void ptdb_shell_save_history(ptdb_shell *shell, const char *filename) {
+	replxx_history_save(shell->replxx, filename);
+}
+
+void ptdb_shell_load_history(ptdb_shell *shell, const char *filename) {
+	replxx_history_load(shell->replxx, filename);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  Match actions
+////////////////////////////////////////////////////////////////////////////////
+#define command_match_action(op) \
+	static pt_data _ ## op(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) { \
+		return (pt_data){ .d = PTDB_ ## op }; \
+	}
+command_match_action(HELP)
+command_match_action(STEP)
+command_match_action(NEXT)
+command_match_action(CONTINUE)
+command_match_action(FINISH)
+command_match_action(BACKTRACE)
+command_match_action(LIST)
+command_match_action(PRINT)
+command_match_action(RULES)
+command_match_action(BREAK_EXPR)
+
+static pt_data _help(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command *cmd = data;
+	cmd->opcode = PTDB_HELP;
+	cmd->data.opcode = argc > 0 ? argv[0].d : PTDB_OPCODE_MAX;
+	return PT_NULL_DATA;
+}
+static pt_data _continue(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command *cmd = data;
+	cmd->opcode = PTDB_CONTINUE;
+	return PT_NULL_DATA;
+}
+static pt_data _finish(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command *cmd = data;
+	cmd->opcode = PTDB_FINISH;
+	return PT_NULL_DATA;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  Syntax errors
+////////////////////////////////////////////////////////////////////////////////
+enum {
+	PTDB_INVALID_COMMAND = 0,
+	PTDB_UNEXPECTED_ARGUMENT,
+};
+
+char *ptdb_syntax_errors[] = {
+	"invalid command, check out `help`",
+	"unexpected argument, check out `help COMMAND`",
+};
+////////////////////////////////////////////////////////////////////////////////
 #include <pega-texto/macro-on.h>
 pt_grammar *ptdb_create_command_grammar() {
 	pt_rule rules[] = {
-		{ "help", I("help") },
+		{ "axiom", SEQ(OR(V("help"),
+						  /* V("step"), */
+						  /* V("next"), */
+						  V("continue"),
+						  V("finish"),
+						  /* V("backtrace"), */
+						  /* V("list"), */
+						  /* V("print"), */
+						  /* V("rules"), */
+						  /* V("break") */
+						  E(PTDB_INVALID_COMMAND, NULL)),
+		               V("S*"), OR(NOT(ANY), E(PTDB_UNEXPECTED_ARGUMENT, NULL))) },
+		{ "help", SEQ_(_help, I("help"),
+		                      Q(SEQ(V("S+"),
+		                            OR(I_(_HELP, "help"),
+		                               I_(_STEP, "step"),
+		                               I_(_NEXT, "next"),
+		                               I_(_CONTINUE, "continue"),
+		                               I_(_FINISH, "finish"),
+		                               I_(_BACKTRACE, "backtrace"),
+		                               I_(_LIST, "list"),
+		                               I_(_PRINT, "print"),
+		                               I_(_RULES, "rules"),
+		                               I_(_BREAK_EXPR, "break"))
+								   ), -1)) },
+		{ "continue", I_(_continue, "continue") },
+		{ "finish", I_(_finish, "finish") },
+		{ "S+", Q(C(isspace), 1) },
+		{ "S*", Q(C(isspace), 0) },
 		{ NULL, NULL },
 	};
 	pt_grammar *grammar = pt_create_grammar(rules, 0);
@@ -50,26 +135,22 @@ pt_grammar *ptdb_create_command_grammar() {
 ptdb_command ptdb_read_command(ptdb_shell *shell, const char *line) {
 	ptdb_command command = {};
 
-	pt_match_options opts = {};
+	pt_match_options opts = { .userdata = &command };
 	pt_match_result res = pt_match_grammar(shell->command_grammar, line, &opts);
 	switch(res.matched) {
 		case PT_NO_MATCH:
-			command.opcode = PTDB_INVALID;
-			command.data.str = "invalid command";
+			command = (ptdb_command){ PTDB_INVALID, { "no match" }};
 			break;
 		case PT_NO_STACK_MEM:
-			command.opcode = PTDB_INVALID;
-			command.data.str = "unsuficient memory for command parser";
+			command = (ptdb_command){ PTDB_INVALID, { "insuficient memory for command parser" }};
 			break;
 		case PT_MATCHED_ERROR:
-			command.opcode = PTDB_INVALID;
-			command.data.str = "matched error";
+			command = (ptdb_command){ PTDB_INVALID, { ptdb_syntax_errors[res.data.i] }};
 			break;
 		case PT_NULL_INPUT:
 			command.opcode = PTDB_FINISH;
 			break;
 		default:
-			//TODO
 			break;
 	}
 
@@ -80,42 +161,20 @@ ptdb_command ptdb_read_command(ptdb_shell *shell, const char *line) {
 #define NORMAL_COLOR "\x1b[0m"
 #define ERROR_COLOR "\x1b[1;31m"
 
-void ptdb_prompt_shell(ptdb_t *debugger) {
+ptdb_command ptdb_prompt_shell(ptdb_t *debugger) {
 	ptdb_shell *shell = &debugger->shell;
-	const char *line = replxx_input(shell->replxx, PROMPT_COLOR "ptdb" NORMAL_COLOR "> ");
-	ptdb_command cmd = ptdb_read_command(shell, line);
-	switch(cmd.opcode) {
-		case PTDB_INVALID:
+	ptdb_command cmd;
+	while(1) {
+		const char *line = replxx_input(shell->replxx, PROMPT_COLOR "ptdb" NORMAL_COLOR "> ");
+		if(line != NULL) replxx_history_add(shell->replxx, line);
+		cmd = ptdb_read_command(shell, line);
+		if(cmd.opcode == PTDB_INVALID) {
 			replxx_print(shell->replxx, ERROR_COLOR "error" NORMAL_COLOR ": %s\n", cmd.data.str);
+		}
+		else {
 			break;
-		case PTDB_HELP:
-			break;
-		case PTDB_STEP:
-			break;
-		case PTDB_NEXT:
-			break;
-		case PTDB_CONTINUE:
-			break;
-		case PTDB_FINISH:
-			break;
-		case PTDB_BACKTRACE:
-			break;
-		case PTDB_LIST:
-			break;
-		case PTDB_PRINT:
-			break;
-		case PTDB_RULES:
-			break;
-		case PTDB_BREAK_EXPR:
-			break;
-		case PTDB_BREAK_RULE:
-			break;
-		case PTDB_BREAK_INPUT_POS:
-			break;
-		case PTDB_BREAK_END:
-			break;
-		case PTDB_BREAK_ERROR:
-			break;
+		}
 	}
+	return cmd;
 }
 

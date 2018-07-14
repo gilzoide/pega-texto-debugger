@@ -17,4 +17,159 @@
  */
 
 #include "command.h"
+#include "pega-texto-debugger.h"
+#include "ptdb.h"
+
+#include <replxx.h>
+
+int ptdb_command_resume_matching(ptdb_command cmd) {
+	switch(cmd.opcode) {
+		case PTDB_HELP:
+		case PTDB_BACKTRACE:
+		case PTDB_LIST:
+		case PTDB_PRINT:
+		case PTDB_RULES:
+		case PTDB_BREAK_EXPR:
+		case PTDB_BREAK_RULE:
+		case PTDB_BREAK_INPUT_POS:
+		case PTDB_BREAK_END:
+		case PTDB_BREAK_ERROR:
+		default:
+			return 0;
+
+		case PTDB_STEP:
+		case PTDB_NEXT:
+		case PTDB_CONTINUE:
+		case PTDB_FINISH:
+			return 1;
+	}
+}
+
+static inline void ptdb_help(ptdb_t *debugger, ptdb_opcode op) {
+	const char *help_string;
+	switch(op) {
+		case PTDB_HELP:
+			help_string =
+			"help [COMMAND]\n"
+			"\n"
+			"Print the help text for selected command"
+			;
+			break;
+		case PTDB_STEP:
+			help_string =
+			"step\n"
+			;
+			break;
+		case PTDB_NEXT:
+			help_string =
+			"next\n"
+			;
+			break;
+		case PTDB_CONTINUE:
+			help_string =
+			"continue\n"
+			;
+			break;
+		case PTDB_FINISH:
+			help_string =
+			"finish\n"
+			;
+			break;
+		case PTDB_BACKTRACE:
+			help_string =
+			"backtrace\n"
+			;
+			break;
+		case PTDB_LIST:
+			help_string =
+			"list\n"
+			;
+			break;
+		case PTDB_PRINT:
+			help_string =
+			"print\n"
+			;
+			break;
+		case PTDB_RULES:
+			help_string =
+			"rules\n"
+			;
+			break;
+		case PTDB_BREAK_EXPR:
+		case PTDB_BREAK_RULE:
+		case PTDB_BREAK_INPUT_POS:
+		case PTDB_BREAK_END:
+		case PTDB_BREAK_ERROR:
+			help_string =
+			"break\n"
+			;
+			break;
+		case PTDB_OPCODE_MAX:
+			help_string =
+			"help [COMMAND]\n"
+			"\n"
+			"Available commands:\n"
+			"\n"
+			"help\n"
+			"step\n"
+			"next\n"
+			"continue\n"
+			"finish\n"
+			"backtrace\n"
+			"list\n"
+			"print\n"
+			"rules\n"
+			"break"
+			;
+			break;
+		default:
+			help_string = "invalid command";
+			break;
+	}
+	replxx_print(debugger->shell.replxx, "%s\n", help_string);
+}
+
+static inline void ptdb_continue(ptdb_t *debugger) {
+	debugger->options ^= PTDB_BREAK_ON_ITERATION;
+}
+
+static inline void ptdb_finish(ptdb_t *debugger) {
+	debugger->options ^= PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR | PTDB_BREAK_ON_END;
+}
+
+void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str) {
+	switch(cmd.opcode) {
+		case PTDB_HELP:
+			ptdb_help(debugger, cmd.data.opcode);
+			break;
+		case PTDB_STEP:
+			break;
+		case PTDB_NEXT:
+			break;
+		case PTDB_CONTINUE:
+			ptdb_continue(debugger);
+			break;
+		case PTDB_FINISH:
+			ptdb_finish(debugger);
+			break;
+		case PTDB_BACKTRACE:
+			break;
+		case PTDB_LIST:
+			break;
+		case PTDB_PRINT:
+			break;
+		case PTDB_RULES:
+			break;
+		case PTDB_BREAK_EXPR:
+			break;
+		case PTDB_BREAK_RULE:
+			break;
+		case PTDB_BREAK_INPUT_POS:
+			break;
+		case PTDB_BREAK_END:
+			break;
+		case PTDB_BREAK_ERROR:
+			break;
+	}
+}
 

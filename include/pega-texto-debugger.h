@@ -38,10 +38,11 @@ enum ptdb_options {
 	 */
 	PTDB_AUTORELEASE = 1 << 0,
 	/**
-	 * If on, the debugger REPL will be opened before starting the match
+	 * If on, the debugger REPL will be opened in the next iteration. Turn
+	 * this on before start matching to open the REPL in the first iteration.
 	 * [default: on].
 	 */
-	PTDB_BREAK_ON_START = 1 << 1,
+	PTDB_BREAK_ON_ITERATION = 1 << 1,
 	/**
 	 * If on, the debugger REPL will be opened when an Error Expression is
 	 * matched [default: on].
@@ -53,10 +54,17 @@ enum ptdb_options {
 	 */
 	PTDB_BREAK_ON_END = 1 << 3,
 	/**
+	 * If on, the command history will be saved/loaded in the file
+	 * PTDB_HISTORY_FILE_NAME [default: off].
+	 */
+	PTDB_SHELL_USE_HISTORY = 1 << 4,
+	/**
 	 * Set of default options.
 	 */
-	PTDB_DEFAULT_OPTIONS = (PTDB_BREAK_ON_START | PTDB_BREAK_ON_ERROR),
+	PTDB_DEFAULT_OPTIONS = (PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR),
 };
+
+#define PTDB_HISTORY_FILE_NAME ".ptdb_history"
 
 /**
  * Create a debugger from Grammar and match options, wrapping it in the

@@ -63,5 +63,13 @@ typedef struct {
 	} data;
 } ptdb_command;
 
+/**
+ * Should matching be resumed after running command?
+ */
+int ptdb_command_resume_matching(ptdb_command cmd);
+
+typedef struct ptdb_t ptdb_t;
+void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str);
+
 #endif
 
