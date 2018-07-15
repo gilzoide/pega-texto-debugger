@@ -61,6 +61,7 @@ command_match_action(LIST)
 command_match_action(PRINT)
 command_match_action(RULES)
 command_match_action(BREAK_EXPR)
+command_match_action(MEMORY)
 
 static pt_data _help(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command *cmd = data;
@@ -76,6 +77,12 @@ static pt_data _continue(const char *str, size_t begin, size_t end, int argc, pt
 static pt_data _finish(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command *cmd = data;
 	cmd->opcode = PTDB_FINISH;
+	return PT_NULL_DATA;
+}
+static pt_data _memory(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command *cmd = data;
+	cmd->opcode = PTDB_MEMORY;
+	cmd->data.memory_target_grammar = (end - begin) > 6; // strlen("memory") == 6
 	return PT_NULL_DATA;
 }
 
@@ -95,7 +102,8 @@ char *ptdb_syntax_errors[] = {
 #include <pega-texto/macro-on.h>
 pt_grammar *ptdb_create_command_grammar() {
 	pt_rule rules[] = {
-		{ "axiom", SEQ(OR(V("help"),
+		{ "axiom", SEQ(V("S*"),
+		               OR(V("help"),
 						  /* V("step"), */
 						  /* V("next"), */
 						  V("continue"),
@@ -104,7 +112,8 @@ pt_grammar *ptdb_create_command_grammar() {
 						  /* V("list"), */
 						  /* V("print"), */
 						  /* V("rules"), */
-						  /* V("break") */
+						  /* V("break"), */
+						  V("memory"),
 						  E(PTDB_INVALID_COMMAND, NULL)),
 		               V("S*"), OR(NOT(ANY), E(PTDB_UNEXPECTED_ARGUMENT, NULL))) },
 		{ "help", SEQ_(_help, I("help"),
@@ -118,10 +127,15 @@ pt_grammar *ptdb_create_command_grammar() {
 		                               I_(_LIST, "list"),
 		                               I_(_PRINT, "print"),
 		                               I_(_RULES, "rules"),
-		                               I_(_BREAK_EXPR, "break"))
+		                               I_(_BREAK_EXPR, "break"),
+		                               I_(_MEMORY, "memory"))
 								   ), -1)) },
 		{ "continue", I_(_continue, "continue") },
 		{ "finish", I_(_finish, "finish") },
+		{ "memory", SEQ_(_memory, I("memory"),
+		                          Q(SEQ(V("S+"),
+		                                I("grammar")
+								  ), -1)) },
 		{ "S+", Q(C(isspace), 1) },
 		{ "S*", Q(C(isspace), 0) },
 		{ NULL, NULL },

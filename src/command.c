@@ -20,7 +20,10 @@
 #include "pega-texto-debugger.h"
 #include "ptdb.h"
 
+#include <pega-texto-memory.h>
 #include <replxx.h>
+
+#include <stdio.h>
 
 int ptdb_command_resume_matching(ptdb_command cmd) {
 	switch(cmd.opcode) {
@@ -34,6 +37,7 @@ int ptdb_command_resume_matching(ptdb_command cmd) {
 		case PTDB_BREAK_INPUT_POS:
 		case PTDB_BREAK_END:
 		case PTDB_BREAK_ERROR:
+		case PTDB_MEMORY:
 		default:
 			return 0;
 
@@ -104,6 +108,11 @@ static inline void ptdb_help(ptdb_t *debugger, ptdb_opcode op) {
 			"break\n"
 			;
 			break;
+		case PTDB_MEMORY:
+			help_string =
+			"memory [grammar]\n"
+			;
+			break;
 		case PTDB_OPCODE_MAX:
 			help_string =
 			"help [COMMAND]\n"
@@ -119,7 +128,8 @@ static inline void ptdb_help(ptdb_t *debugger, ptdb_opcode op) {
 			"list\n"
 			"print\n"
 			"rules\n"
-			"break"
+			"break\n"
+			"memory"
 			;
 			break;
 		default:
@@ -135,6 +145,25 @@ static inline void ptdb_continue(ptdb_t *debugger) {
 
 static inline void ptdb_finish(ptdb_t *debugger) {
 	debugger->options ^= PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR | PTDB_BREAK_ON_END;
+}
+
+static inline void ptdb_memory(int memory_target_grammar, ptdb_t *debugger, const pt_match_state_stack *s, const pt_match_action_stack *a) {
+	if(memory_target_grammar) {
+		pt_memory memory_usage = pt_memory_for_grammar(debugger->grammar);
+		printf("Expression: %d\n", memory_usage.expression_byte_count);
+		printf("Grammar:    %d\n", memory_usage.grammar_byte_count);
+		printf("Array:      %d\n", memory_usage.array_byte_count);
+		printf("String:     %d\n", memory_usage.string_byte_count);
+		printf("Total:      %d\n", memory_usage.expression_byte_count
+				+ memory_usage.grammar_byte_count
+				+ memory_usage.array_byte_count
+				+ memory_usage.string_byte_count);
+	}
+	else {
+		pt_memory_match_stacks memory_usage = pt_memory_for_match_stacks(s, a);
+		printf("State stack:  %d / %d\n", memory_usage.state_stack_used_byte_count, memory_usage.state_stack_total_byte_count);
+		printf("Action stack: %d / %d\n", memory_usage.action_stack_used_byte_count, memory_usage.action_stack_total_byte_count);
+	}
 }
 
 void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_stack *s, const pt_match_action_stack *a, const char *str) {
@@ -169,6 +198,9 @@ void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_s
 		case PTDB_BREAK_END:
 			break;
 		case PTDB_BREAK_ERROR:
+			break;
+		case PTDB_MEMORY:
+			ptdb_memory(cmd.data.memory_target_grammar, debugger, s, a);
 			break;
 	}
 }

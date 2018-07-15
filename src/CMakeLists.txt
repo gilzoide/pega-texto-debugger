@@ -23,7 +23,8 @@ if(UNIX AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 endif()
 
 # example test
-add_executable(ptdb-test ${libsrc} main.c)
+add_executable(ptdb-test main.c)
+target_link_libraries(ptdb-test pega-texto-debugger)
 
 # Install library
 install(TARGETS pega-texto-debugger

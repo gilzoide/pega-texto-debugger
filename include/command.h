@@ -44,6 +44,7 @@ typedef enum {
 	PTDB_BREAK_INPUT_POS,
 	PTDB_BREAK_END,
 	PTDB_BREAK_ERROR,
+	PTDB_MEMORY,
 
 	PTDB_OPCODE_MAX,
 } ptdb_opcode;
@@ -60,6 +61,7 @@ typedef struct {
 		pt_expr *expr; ///< Pega-texto Expression.
 		int pos;       ///< Position at input string.
 		int opcode;    ///< Opcode of reference command for help.
+		int memory_target_grammar;  ///< Memory command is targeting grammar?
 	} data;
 } ptdb_command;
 
