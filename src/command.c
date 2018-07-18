@@ -18,6 +18,7 @@
 
 #include "command.h"
 #include "pega-texto-debugger.h"
+#include "print_expr.h"
 #include "ptdb.h"
 
 #include <pega-texto-memory.h>
@@ -31,7 +32,7 @@ int ptdb_command_resume_matching(ptdb_command cmd) {
 		case PTDB_BACKTRACE:
 		case PTDB_LIST:
 		case PTDB_PRINT:
-		case PTDB_RULES:
+		case PTDB_RULE:
 		case PTDB_BREAK_EXPR:
 		case PTDB_BREAK_RULE:
 		case PTDB_BREAK_INPUT_POS:
@@ -94,9 +95,9 @@ static inline void ptdb_help(ptdb_t *debugger, ptdb_opcode op) {
 			"print\n"
 			;
 			break;
-		case PTDB_RULES:
+		case PTDB_RULE:
 			help_string =
-			"rules\n"
+			"rule\n"
 			;
 			break;
 		case PTDB_BREAK_EXPR:
@@ -147,6 +148,10 @@ static inline void ptdb_finish(ptdb_t *debugger) {
 	debugger->options ^= PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR | PTDB_BREAK_ON_END;
 }
 
+static inline void ptdb_rule(ptdb_t *debugger) {
+	ptdb_print_grammar(debugger->shell.replxx, debugger->grammar);
+}
+
 static inline void ptdb_memory(int memory_target_grammar, ptdb_t *debugger, const pt_match_state_stack *s, const pt_match_action_stack *a) {
 	if(memory_target_grammar) {
 		pt_memory memory_usage = pt_memory_for_grammar(debugger->grammar);
@@ -187,7 +192,8 @@ void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_s
 			break;
 		case PTDB_PRINT:
 			break;
-		case PTDB_RULES:
+		case PTDB_RULE:
+			ptdb_rule(debugger);
 			break;
 		case PTDB_BREAK_EXPR:
 			break;

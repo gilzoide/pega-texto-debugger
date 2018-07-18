@@ -59,7 +59,7 @@ command_match_action(FINISH)
 command_match_action(BACKTRACE)
 command_match_action(LIST)
 command_match_action(PRINT)
-command_match_action(RULES)
+command_match_action(RULE)
 command_match_action(BREAK_EXPR)
 command_match_action(MEMORY)
 
@@ -77,6 +77,11 @@ static pt_data _continue(const char *str, size_t begin, size_t end, int argc, pt
 static pt_data _finish(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command *cmd = data;
 	cmd->opcode = PTDB_FINISH;
+	return PT_NULL_DATA;
+}
+static pt_data _rule(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command *cmd = data;
+	cmd->opcode = PTDB_RULE;
 	return PT_NULL_DATA;
 }
 static pt_data _memory(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
@@ -111,7 +116,7 @@ pt_grammar *ptdb_create_command_grammar() {
 						  /* V("backtrace"), */
 						  /* V("list"), */
 						  /* V("print"), */
-						  /* V("rules"), */
+						  V("rule"),
 						  /* V("break"), */
 						  V("memory"),
 						  E(PTDB_INVALID_COMMAND, NULL)),
@@ -126,12 +131,17 @@ pt_grammar *ptdb_create_command_grammar() {
 		                               I_(_BACKTRACE, "backtrace"),
 		                               I_(_LIST, "list"),
 		                               I_(_PRINT, "print"),
-		                               I_(_RULES, "rules"),
+		                               I_(_RULE, "rule"),
 		                               I_(_BREAK_EXPR, "break"),
 		                               I_(_MEMORY, "memory"))
 								   ), -1)) },
 		{ "continue", I_(_continue, "continue") },
 		{ "finish", I_(_finish, "finish") },
+		{ "rule", SEQ_(_rule, I("rule"),
+		                        Q(SEQ(V("S+"),
+		                              V("rule-name")
+		                        ), -1)) },
+		{ "rule-name", ANY },
 		{ "memory", SEQ_(_memory, I("memory"),
 		                          Q(SEQ(V("S+"),
 		                                I("grammar")

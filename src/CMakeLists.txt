@@ -3,7 +3,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include"
 	${PEGA_TEXTO_INCLUDE_DIRS} ${PEGA_TEXTO_MEMORY_INCLUDE_DIRS} ${REPLXX_INCLUDE_DIRS})
 
 # library
-set(libsrc command.c  match_actions.c  ptdb.c  shell.c  wrap.c)
+set(libsrc command.c  match_actions.c  print_expr.c ptdb.c  shell.c  wrap.c)
 add_library(pega-texto-debugger ${libsrc})
 set_target_properties(pega-texto-debugger PROPERTIES
 	VERSION "${PROJECT_VERSION}"
