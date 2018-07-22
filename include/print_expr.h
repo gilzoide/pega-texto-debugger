@@ -26,6 +26,7 @@
 #include <pega-texto.h>
 
 void ptdb_print_expr(Replxx *replxx, pt_expr *expr);
+void ptdb_print_rule(Replxx *replxx, pt_grammar *grammar, int index);
 void ptdb_print_grammar(Replxx *replxx, pt_grammar *grammar);
 
 #endif

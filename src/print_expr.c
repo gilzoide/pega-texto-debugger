@@ -62,7 +62,7 @@ void ptdb_print_char_class(Replxx *replxx, pt_character_class_function f) {
 		else if(f == isspace)  replxx_print(replxx, "\\s");
 		else if(f == isupper)  replxx_print(replxx, "\\u");
 		else if(f == isxdigit) replxx_print(replxx, "\\x");
-		else                   replxx_print(replxx, "C%p", f);
+		else                   replxx_print(replxx, "C:%p", f);
 }
 
 void ptdb_print_expr_rec(Replxx *replxx, pt_expr *expr, int *paren_count) {
@@ -138,7 +138,7 @@ void ptdb_print_expr_rec(Replxx *replxx, pt_expr *expr, int *paren_count) {
 				replxx_print(replxx, "%s)%s", paren_color, reset);
 				break;
 			case PT_CUSTOM_MATCHER:
-				replxx_print(replxx, "F%p", expr->data.matcher);
+				replxx_print(replxx, "F:%p", expr->data.matcher);
 				break;
 			case PT_ERROR:
 				replxx_print(replxx, "#%d", expr->N);
@@ -152,12 +152,16 @@ void ptdb_print_expr(Replxx *replxx, pt_expr *expr) {
 	ptdb_print_expr_rec(replxx, expr, &paren_level);
 }
 
+void ptdb_print_rule(Replxx *replxx, pt_grammar *grammar, int index) {
+	replxx_print(replxx, "%d) %s <- ", index, grammar->names[index]);
+	ptdb_print_expr(replxx, grammar->es[index]);
+	replxx_print(replxx, "\n");
+}
+
 void ptdb_print_grammar(Replxx *replxx, pt_grammar *grammar) {
 	int i;
 	for(i = 0; i < grammar->N; i++) {
-		replxx_print(replxx, "%s <- ", grammar->names[i]);
-		ptdb_print_expr(replxx, grammar->es[i]);
-		replxx_print(replxx, "\n");
+		ptdb_print_rule(replxx, grammar, i);
 	}
 }
 

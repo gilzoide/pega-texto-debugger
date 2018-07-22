@@ -27,7 +27,6 @@ pt_match_options ptdb_wrap(pt_grammar *grammar, pt_match_options *match_options,
 void ptdb_destroy_wrapped(pt_match_options *match_options) {
 	if(match_options) {
 		ptdb_destroy((ptdb_t *) match_options->userdata);
-		match_options->userdata = NULL;
 	}
 }
 

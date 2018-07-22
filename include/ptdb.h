@@ -37,6 +37,8 @@ typedef struct ptdb_t {
 	pt_grammar *grammar;
 	/// Debugger shell data.
 	ptdb_shell shell;
+	/// String -> Expression mapping, for fast rule indexing.
+	void *rule_table;
 	/// The debugger options.
 	int options;
 } ptdb_t;

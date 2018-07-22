@@ -148,8 +148,23 @@ static inline void ptdb_finish(ptdb_t *debugger) {
 	debugger->options ^= PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR | PTDB_BREAK_ON_END;
 }
 
-static inline void ptdb_rule(ptdb_t *debugger) {
-	ptdb_print_grammar(debugger->shell.replxx, debugger->grammar);
+static inline void ptdb_backtrace(ptdb_t *debugger, const pt_match_state_stack *s) {
+	int i;
+	for(i = s->size - 1; i >= 0; i--) {
+		pt_match_state *state = s->states + i;
+		replxx_print(debugger->shell.replxx, "%d) ", i);
+		ptdb_print_expr(debugger->shell.replxx, state->e);
+		replxx_print(debugger->shell.replxx, "\n");
+	}
+}
+
+static inline void ptdb_rule(ptdb_t *debugger, int index) {
+	if(index < 0) {
+		ptdb_print_grammar(debugger->shell.replxx, debugger->grammar);
+	}
+	else {
+		ptdb_print_rule(debugger->shell.replxx, debugger->grammar, index);
+	}
 }
 
 static inline void ptdb_memory(int memory_target_grammar, ptdb_t *debugger, const pt_match_state_stack *s, const pt_match_action_stack *a) {
@@ -187,13 +202,14 @@ void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_s
 			ptdb_finish(debugger);
 			break;
 		case PTDB_BACKTRACE:
+			ptdb_backtrace(debugger, s);
 			break;
 		case PTDB_LIST:
 			break;
 		case PTDB_PRINT:
 			break;
 		case PTDB_RULE:
-			ptdb_rule(debugger);
+			ptdb_rule(debugger, cmd.data.index);
 			break;
 		case PTDB_BREAK_EXPR:
 			break;

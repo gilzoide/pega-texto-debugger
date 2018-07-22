@@ -68,7 +68,7 @@ pt_grammar *ptdb_create_command_grammar();
 /**
  * Read a command from string.
  */
-ptdb_command ptdb_read_command(ptdb_shell *shell, const char *str);
+ptdb_command ptdb_read_command(ptdb_t *debugger, const char *str);
 
 /**
  * Show the prompt and wait for user 
