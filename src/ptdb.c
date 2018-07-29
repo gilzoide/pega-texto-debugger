@@ -68,8 +68,10 @@ ptdb_t *ptdb_for_grammar(pt_grammar *grammar, pt_match_options *match_options, e
 		}
 
 		if(match_options == NULL) match_options = &pt_default_match_options;
+		debugger->last_command = (ptdb_command){ .opcode = PTDB_HELP, { .opcode = PTDB_OPCODE_MAX }};
 		debugger->match_options = *match_options;
 		debugger->grammar = grammar;
+		debugger->level_to_break = INT_MAX;
 		debugger->options = opts;
 	}
 	return debugger;

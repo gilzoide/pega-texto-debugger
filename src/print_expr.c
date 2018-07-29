@@ -45,10 +45,10 @@ const char *ptdb_color_for_paren_level(int level) {
 		blue,
 		magenta,
 		cyan,
-		black,
+		/* black, */
 	};
 
-	return colors[level % 7];
+	return colors[level % (sizeof(colors)/sizeof(char *))];
 }
 
 void ptdb_print_char_class(Replxx *replxx, pt_character_class_function f) {

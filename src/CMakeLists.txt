@@ -1,6 +1,6 @@
-link_libraries(${PEGA_TEXTO_LIBRARIES} ${PEGA_TEXTO_MEMORY_LIBRARIES} ${REPLXX_LIBRARIES})
+link_libraries(${PEGA_TEXTO_LIBRARIES} ${PEGA_TEXTO_MEMORY_LIBRARIES} ${REPLXX_LIBRARIES} ${JUDY_LIBRARIES})
 include_directories("${PROJECT_SOURCE_DIR}/include"
-	${PEGA_TEXTO_INCLUDE_DIRS} ${PEGA_TEXTO_MEMORY_INCLUDE_DIRS} ${REPLXX_INCLUDE_DIRS})
+	${PEGA_TEXTO_INCLUDE_DIRS} ${PEGA_TEXTO_MEMORY_INCLUDE_DIRS} ${REPLXX_INCLUDE_DIRS} ${JUDY_INCLUDE_DIRS})
 
 # library
 set(libsrc command.c  match_actions.c  print_expr.c ptdb.c  shell.c  wrap.c)
@@ -23,8 +23,8 @@ if(UNIX AND BUILD_SHARED_LIBS AND LINK_SONAME_FILE)
 endif()
 
 # example test
-add_executable(ptdb-test main.c)
-target_link_libraries(ptdb-test pega-texto-debugger)
+add_executable(ptdb-test ${libsrc} main.c)
+# target_link_libraries(ptdb-test pega-texto-debugger)
 
 # Install library
 install(TARGETS pega-texto-debugger

@@ -89,10 +89,25 @@ command_match_action(RULE)
 command_match_action(BREAK_EXPR)
 command_match_action(MEMORY)
 
+static pt_data _last_command(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command_match_userdata *userdata = data;
+	*userdata->cmd = userdata->debugger->last_command;
+	return PT_NULL_DATA;
+}
 static pt_data _help(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command_match_userdata *userdata = data;
 	userdata->cmd->opcode = PTDB_HELP;
 	userdata->cmd->data.opcode = argc > 0 ? argv[0].i : PTDB_OPCODE_MAX;
+	return PT_NULL_DATA;
+}
+static pt_data _next(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command_match_userdata *userdata = data;
+	userdata->cmd->opcode = PTDB_NEXT;
+	return PT_NULL_DATA;
+}
+static pt_data _step(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command_match_userdata *userdata = data;
+	userdata->cmd->opcode = PTDB_STEP;
 	return PT_NULL_DATA;
 }
 static pt_data _continue(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
@@ -108,11 +123,20 @@ static pt_data _finish(const char *str, size_t begin, size_t end, int argc, pt_d
 static pt_data _backtrace(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command_match_userdata *userdata = data;
 	userdata->cmd->opcode = PTDB_BACKTRACE;
+	userdata->cmd->data.depth = -1;
 	return PT_NULL_DATA;
+}
+static pt_data _list(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	ptdb_command_match_userdata *userdata = data;
+	userdata->cmd->opcode = PTDB_LIST;
+	return PT_NULL_DATA;
+}
+static pt_data toint(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
+	return (pt_data){ .i = atoi(str + begin) };
 }
 static pt_data _rule_arg_num(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command_match_userdata *userdata = data;
-	int arg = atoi(str + begin);
+	int arg = argv[0].i;
 	return (pt_data){ .i = arg < userdata->debugger->grammar->N ? arg : -PTDB_INVALID_RULE_INDEX };
 }
 static pt_data _rule_arg_str(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
@@ -149,7 +173,7 @@ static pt_data _rule(const char *str, size_t begin, size_t end, int argc, pt_dat
 static pt_data _memory(const char *str, size_t begin, size_t end, int argc, pt_data *argv, void *data) {
 	ptdb_command_match_userdata *userdata = data;
 	userdata->cmd->opcode = PTDB_MEMORY;
-	userdata->cmd->data.memory_target_grammar = (end - begin) > 6; // strlen("memory") == 6
+	userdata->cmd->data.memory_target_grammar = str[end - 1] == 'r' || str[end - 1] == 'g';
 	return PT_NULL_DATA;
 }
 
@@ -159,54 +183,62 @@ static pt_data _memory(const char *str, size_t begin, size_t end, int argc, pt_d
 static int isnotspace(int c) {
 	return !isspace(c) && c;
 }
+static int eof(int c) {
+	return !c;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #include <pega-texto/macro-on.h>
 pt_grammar *ptdb_create_command_grammar() {
 	pt_rule rules[] = {
 		{ "axiom", SEQ(V("S*"),
-		               OR(V("help"),
-						  /* V("step"), */
-						  /* V("next"), */
-						  V("continue"),
-						  V("finish"),
-						  V("backtrace"),
-						  /* V("list"), */
-						  /* V("print"), */
-						  V("rule"),
-						  /* V("break"), */
-						  V("memory"),
-						  E(PTDB_INVALID_COMMAND, NULL)),
-		               V("S*"), OR(NOT(ANY), E(PTDB_UNEXPECTED_ARGUMENT, NULL))) },
-		{ "help", SEQ_(_help, I("help"),
+		               OR(C_(_last_command, eof),
+		                  OR(V("help"),
+						     V("step"),
+						     V("next"),
+						     V("continue"),
+						     V("finish"),
+						     V("backtrace"),
+						     V("list"),
+						     /* V("print"), */
+						     V("rule"),
+						     /* V("break"), */
+						     V("memory"),
+						     E(PTDB_INVALID_COMMAND, NULL)),
+		                  V("S*"), OR(NOT(ANY), E(PTDB_UNEXPECTED_ARGUMENT, NULL)))) },
+		{ "help", SEQ_(_help, OR(L("help"), L("h")),
 		                      Q(SEQ(V("S+"),
-		                            OR(I_(_HELP, "help"),
-		                               I_(_STEP, "step"),
-		                               I_(_NEXT, "next"),
-		                               I_(_CONTINUE, "continue"),
-		                               I_(_FINISH, "finish"),
-		                               I_(_BACKTRACE, "backtrace"),
-		                               I_(_LIST, "list"),
-		                               I_(_PRINT, "print"),
-		                               I_(_RULE, "rule"),
-		                               I_(_BREAK_EXPR, "break"),
-		                               I_(_MEMORY, "memory"))
+		                            OR(OR_(_HELP, L("help"), L("h")),
+		                               OR_(_STEP, L("step"), L("s")),
+		                               OR_(_NEXT, L("next"), L("n")),
+		                               OR_(_CONTINUE, L("continue"), L("c")),
+		                               OR_(_FINISH, L("finish"), L("f")),
+		                               OR_(_BACKTRACE, L("backtrace"), L("bt")),
+		                               OR_(_LIST, L("list"), L("l")),
+		                               OR_(_PRINT, L("print"), L("p")),
+		                               OR_(_RULE, L("rule"), L("r")),
+		                               OR_(_BREAK_EXPR, L("break"), L("b")),
+		                               OR_(_MEMORY, L("memory"), L("m")),
+									   E(PTDB_INVALID_COMMAND, NULL))
 								   ), -1)) },
-		{ "continue", I_(_continue, "continue") },
-		{ "finish", I_(_finish, "finish") },
-		{ "backtrace", I_(_backtrace, "backtrace") },
-		{ "rule", SEQ_(_rule, I("rule"),
-		                        Q(SEQ(V("S+"),
-		                              OR(V_(_rule_arg_num, "rule-index"),
-		                                 V_(_rule_arg_str, "rule-name"))
-		                        ), -1)) },
-		{ "rule-index", Q(C(isdigit), 1) },
+		{ "next", OR_(_next, L("next"), L("n")) },
+		{ "step", OR_(_step, L("step"), L("s")) },
+		{ "continue", OR_(_continue, L("continue"), L("c")) },
+		{ "finish", OR_(_finish, L("finish"), L("f")) },
+		{ "backtrace", OR_(_backtrace, L("backtrace"), L("bt")) },
+		{ "list", OR_(_list, L("list"), L("l")) },
+		{ "rule", SEQ_(_rule, OR(L("rule"), L("r")),
+		                      Q(SEQ(V("S+"),
+		                            OR(V_(_rule_arg_num, "number"),
+		                               V_(_rule_arg_str, "rule-name"))
+		                      ), -1)) },
 		{ "rule-name", OR(SEQ(L("`"), Q(BUT(L("`")), 1), OR(L("`"), E(PTDB_BACKTICK_EXPECTED, NULL))),
 		                  Q(C(isnotspace), 1)) },
-		{ "memory", SEQ_(_memory, I("memory"),
+		{ "memory", SEQ_(_memory, OR(L("memory"), L("m")),
 		                          Q(SEQ(V("S+"),
-		                                I("grammar")
+		                                OR(L("grammar"), L("g"))
 								  ), -1)) },
+		{ "number", Q_(toint, C(isdigit), 1) },
 		{ "S+", Q(C(isspace), 1) },
 		{ "S*", Q(C(isspace), 0) },
 		{ NULL, NULL },
@@ -258,6 +290,7 @@ ptdb_command ptdb_prompt_shell(ptdb_t *debugger) {
 			replxx_print(shell->replxx, ERROR_COLOR "error" NORMAL_COLOR ": %s\n", cmd.data.str);
 		}
 		else {
+			debugger->last_command = cmd;
 			break;
 		}
 	}

@@ -140,22 +140,134 @@ static inline void ptdb_help(ptdb_t *debugger, ptdb_opcode op) {
 	replxx_print(debugger->shell.replxx, "%s\n", help_string);
 }
 
+static inline void ptdb_next(ptdb_t *debugger, int current_level) {
+	debugger->level_to_break = current_level;
+}
+
+static inline void ptdb_step(ptdb_t *debugger, int current_level) {
+	debugger->level_to_break = current_level + 1;
+}
+
 static inline void ptdb_continue(ptdb_t *debugger) {
 	debugger->options ^= PTDB_BREAK_ON_ITERATION;
+	debugger->level_to_break = 0;
 }
 
 static inline void ptdb_finish(ptdb_t *debugger) {
 	debugger->options ^= PTDB_BREAK_ON_ITERATION | PTDB_BREAK_ON_ERROR | PTDB_BREAK_ON_END;
+	debugger->level_to_break = 0;
 }
 
-static inline void ptdb_backtrace(ptdb_t *debugger, const pt_match_state_stack *s) {
-	int i;
-	for(i = s->size - 1; i >= 0; i--) {
-		pt_match_state *state = s->states + i;
-		replxx_print(debugger->shell.replxx, "%d) ", i);
-		ptdb_print_expr(debugger->shell.replxx, state->e);
-		replxx_print(debugger->shell.replxx, "\n");
+static void ptdb_print_match_state(Replxx *replxx, const pt_match_state *state) {
+	pt_expr *expr = state->e;
+	switch(expr->op) {
+		case PT_LITERAL:
+			replxx_print(replxx, "{ op: L, str: \"%s\" }", expr->data.characters);
+			break;
+		case PT_CASE_INSENSITIVE:
+			replxx_print(replxx, "{ op: I, str: \"%s\" }", expr->data.characters);
+			break;
+		case PT_CHARACTER_CLASS:
+			replxx_print(replxx, "{ op: C, class: ");
+			ptdb_print_expr(replxx, expr);
+			replxx_print(replxx, " }");
+			break;
+		case PT_SET:
+			replxx_print(replxx, "{ op: S, set: ");
+			ptdb_print_expr(replxx, expr);
+			replxx_print(replxx, " }");
+			break;
+		case PT_RANGE:
+			replxx_print(replxx, "{ op: R, range: ");
+			ptdb_print_expr(replxx, expr);
+			replxx_print(replxx, " }");
+			break;
+		case PT_ANY:
+			replxx_print(replxx, "{ op: ANY }");
+			break;
+		case PT_NON_TERMINAL:
+			replxx_print(replxx, "{ op: V, rule: ");
+			ptdb_print_expr(replxx, expr);
+			replxx_print(replxx, " }");
+			break;
+		case PT_QUANTIFIER:
+			replxx_print(replxx, "{ op: Q, N: %d, current: %d, chars matched: %d }", expr->N, state->r1, state->r2);
+			break;
+		case PT_AND:
+			replxx_print(replxx, "{ op: AND }");
+			break;
+		case PT_NOT:
+			replxx_print(replxx, "{ op: NOT }");
+			break;
+		case PT_SEQUENCE:
+			replxx_print(replxx, "{ op: SEQ, current: %d, chars matched: %d }", state->r1, state->r2);
+			break;
+		case PT_CHOICE:
+			replxx_print(replxx, "{ op: OR, current: %d }", state->r1);
+			break;
+		case PT_CUSTOM_MATCHER:
+			replxx_print(replxx, "{ op: F, matcher: ");
+			ptdb_print_expr(replxx, expr);
+			replxx_print(replxx, " }");
+			break;
+		case PT_ERROR:
+			replxx_print(replxx, "{ op: E }");
+			break;
 	}
+}
+static void ptdb_print_backtrace_line(Replxx *replxx, int index, const pt_match_state *state, int rule_index, const char **rule_names) {
+	replxx_print(replxx, "%d) ", index);
+	if(rule_names[rule_index]) {
+		replxx_print(replxx, "%s ", rule_names[rule_index]);
+	}
+	else {
+		replxx_print(replxx, "<%d> ", rule_index);
+	}
+	ptdb_print_match_state(replxx, state);
+	replxx_print(replxx, "\n");
+}
+static inline void ptdb_backtrace(ptdb_t *debugger, const pt_match_state_stack *s, int depth_to_print) {
+	int i, j, previous_rule_index, rule_index;
+	depth_to_print = depth_to_print < 0 ? s->size : depth_to_print;
+		
+	const int expr_position_line_size = 3 * s->size;
+	char expr_position_line[expr_position_line_size];
+	expr_position_line[expr_position_line_size - 1] = '\0';
+	int expr_position_length = 0;
+
+	const pt_match_state *state;
+	const pt_expr *expr;
+	for(i = previous_rule_index = s->size - 1; i > 0; i--) {
+		state = s->states + i;
+		expr = state->e;
+		if(expr->op == PT_NON_TERMINAL) {
+			rule_index = expr->N;
+			for(j = previous_rule_index; j > i; j--) {
+				state = s->states + j;
+				ptdb_print_backtrace_line(debugger->shell.replxx, j, state, rule_index, debugger->grammar->names);
+				if(--depth_to_print <= 0) return;
+			}
+			previous_rule_index = i;
+		}
+	}
+	for(j = previous_rule_index; j >= 0; j--) {
+		state = s->states + j;
+		ptdb_print_backtrace_line(debugger->shell.replxx, j, state, 0, debugger->grammar->names);
+		if(--depth_to_print <= 0) return;
+	}
+}
+
+static inline void ptdb_list(ptdb_t *debugger, const char *str, size_t pos) {
+	int i;
+	replxx_print(debugger->shell.replxx, "%s\n", str);
+	for(i = 0; i < pos; i++) {
+		replxx_print(debugger->shell.replxx, ".");
+	}
+	replxx_print(debugger->shell.replxx, "^");
+	for(i = pos + 1; str[i]; i++) {
+		replxx_print(debugger->shell.replxx, ".");
+	}
+	replxx_print(debugger->shell.replxx, "\n");
 }
 
 static inline void ptdb_rule(ptdb_t *debugger, int index) {
@@ -192,8 +304,10 @@ void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_s
 			ptdb_help(debugger, cmd.data.opcode);
 			break;
 		case PTDB_STEP:
+			ptdb_step(debugger, s->size);
 			break;
 		case PTDB_NEXT:
+			ptdb_next(debugger, s->size);
 			break;
 		case PTDB_CONTINUE:
 			ptdb_continue(debugger);
@@ -202,9 +316,10 @@ void ptdb_run_command(ptdb_t *debugger, ptdb_command cmd, const pt_match_state_s
 			ptdb_finish(debugger);
 			break;
 		case PTDB_BACKTRACE:
-			ptdb_backtrace(debugger, s);
+			ptdb_backtrace(debugger, s, cmd.data.depth);
 			break;
 		case PTDB_LIST:
+			ptdb_list(debugger, str, pt_get_current_state(s)->pos + pt_get_current_state(s)->r2);
 			break;
 		case PTDB_PRINT:
 			break;

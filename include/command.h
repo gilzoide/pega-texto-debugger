@@ -61,6 +61,7 @@ typedef struct {
 		pt_expr *expr; ///< Pega-texto Expression.
 		int pos;       ///< Position at input string.
 		int index;     ///< Rule index.
+		int depth;     ///< Depth wanted for backtrace.
 		int opcode;    ///< Opcode of reference command for help.
 		int memory_target_grammar;  ///< Memory command is targeting grammar?
 	} data;

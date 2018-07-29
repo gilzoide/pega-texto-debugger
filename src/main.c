@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	pt_grammar *grammar = ptdb_create_command_grammar();
 	pt_match_options opts = ptdb_wrap(grammar, NULL,
 			PTDB_DEFAULT_OPTIONS | PTDB_AUTORELEASE | PTDB_SHELL_USE_HISTORY);
-	pt_match_grammar(grammar, "help help", &opts);
+	pt_match_grammar(grammar, " help help ", &opts);
 
 	pt_destroy_grammar(grammar);
 	return 0;

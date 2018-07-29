@@ -26,8 +26,10 @@ void ptdb_each_iteration(const pt_match_state_stack *s, const pt_match_action_st
 		// call user defined each_iteration
 		if(debugger->match_options.each_iteration) debugger->match_options.each_iteration(s, a, str, debugger->match_options.userdata);
 
-		if(debugger->options & PTDB_BREAK_ON_ITERATION) {
-			ptdb_command cmd;
+		if(s->size <= debugger->level_to_break) {
+			ptdb_command cmd = { .opcode = PTDB_BACKTRACE, { .depth = 1 }};
+			ptdb_run_command(debugger, cmd, s, a, str);
+
 			do {
 				cmd = ptdb_prompt_shell(debugger);
 				ptdb_run_command(debugger, cmd, s, a, str);

@@ -37,8 +37,12 @@ typedef struct ptdb_t {
 	pt_grammar *grammar;
 	/// Debugger shell data.
 	ptdb_shell shell;
+	/// Last command executed.
+	ptdb_command last_command;
 	/// String -> Expression mapping, for fast rule indexing.
 	void *rule_table;
+	/// State stack level where to break.
+	unsigned int level_to_break;
 	/// The debugger options.
 	int options;
 } ptdb_t;
